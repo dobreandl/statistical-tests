@@ -11,6 +11,7 @@ from Tests.RankSum import *
 def printMenu():
     print("\n Menu: \n")
     print("1. Chi-Square")
+    print("2. Rank sum")
     print("0. Exit")
 
 
