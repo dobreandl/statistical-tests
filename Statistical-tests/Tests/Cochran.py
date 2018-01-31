@@ -1,5 +1,14 @@
+#
+# Cochran's test for variance outliers
+#
+# Author: Daniel Bota (dbota@cs.ubbcluj.ro)
+#
+
 import os
 import math
+
+row_values = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 16, 36, 144]
+columns_values = [2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 15, 20, 24, 30, 40, 60, 120]
 
 critical_value_table_01 = [
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -29,17 +38,27 @@ critical_value_table_05 = [
 [0, 0.6020, 0.4450, 0.3733, 0.3311, 0.3029, 0.2823, 0.2666, 0.2541, 0.2439, 0.2353, 0.2032, 0.1655, 0.1308, 0.1000]
 ]
 
+#
 # Calculate and return the sum of values in the list
-def get_sum(data):
+#
+# Input: a list of values
+#
+def get_sum(value_list):
     _sum = 0.00
-    for _value in data:
+    for _value in value_list:
         _sum = _sum + float(_value)
         
     return _sum
-    
-# Return the critical value from given table
-def get_critical_value(table, row, col):
-    if (table == 0.01):
+#    
+# Return the critical value from a given table
+#
+# Input:
+#   - level of significance (alpha): 0.01 or 0.05
+#   - number of samples (row)
+#   - degrees of freedom (col)
+#
+def get_critical_value(alpha, row, col):
+    if (alpha == 0.01):
         #print "Row: ", row
         #print "Col: ", col
         return critical_value_table_01[row][col]
@@ -47,27 +66,29 @@ def get_critical_value(table, row, col):
     return critical_value_table_05[row][col]
 
     
-
-# Calculate and return the variance of data
-def get_variance(data):
+#
+# Calculate and return the variance of a data sample
+#
+# Input: the data sample as a list of values
+#
+def get_variance(data_sample):
     _sum = 0.00;
     _variance = 0.00
     
     # Step 1. Add up all values
-    for _value in data:
-        # print _value
+    for _value in data_sample:
         _sum = _sum + float(_value);
     
-    # Step 2. Square the sum and divide by the number of items
-    _sum2 = _sum**2 / len(data)
+    # Step 2. Square the sum and divide by the number of values
+    _sum2 = (_sum**2) / len(data_sample)
     
-    # Step 3. Sum the square of each value
+    # Step 3. Sum the square of each value in data sample
     _sum3 = 0.00
-    for _value in data:
+    for _value in data_sample:
         _val = float(_value)
         _sum3 = _sum3 + _val**2
         
-    # Step 4. Substract 
+    # Step 4. Substract sums
     _sum4 = _sum3 - _sum2
     
     # Step 5. Calculate the degrees of freedom
@@ -78,7 +99,7 @@ def get_variance(data):
         
     return _variance;
 
-# set the working directory
+# set the path data directory
 _data_path = 'D:\Projects\Python\Statistics'
 os.chdir(_data_path)
 print os.getcwd()
@@ -88,51 +109,48 @@ print "Cochran's test for variance outliers"
 print "=========================================================================================\n"
 print "The NULL HYPOTESIS: The large variance does not differ significantly from the others.\n"
 
-# get the data file name
+# enter the data file name
 _filename = raw_input("Enter the data file name: ")
 
 # open the data file
-#file = open('heights.csv', 'rb')
-file = open(_filename, 'rb')
-#print file.read()
+data_file = open(_filename, 'rb')
 
 # read the data
-dataset = file.read().split("\n")
-#print dataset
+dataset = data_file.read().split("\n")
 
-# get the number of populations K in the dataset
-_tmp = raw_input('Enter the number of populations: ')
-K = int(_tmp);
+# enter the number of data samples K
+kappa = int(raw_input('Enter the number of samples (2 < K <= 10): '));
 
-# calculate the variance for each population
-n = 10
+# enter the number of items in each data sample
+n = int(raw_input('Enter the number of items in each data sample (2 < n <= 10): '))
+
+# enter the level of significance
+alpha = float(raw_input('Enter the level of significance (0.01 or 0.05): '))
+
+# calculate the variance for each sample
 variance_list = []
-#_chunk_size = len(dataset) / K
-for i in range(K):
-    #left_index = i * _chunk_size
+for i in range(kappa):
     left_index = i * n
-    #right_index = (i + 1) * _chunk_size - 1
     right_index = (i + 1) * n - 1
     variance_list.append(get_variance(dataset[left_index:right_index]))
-    #print variance_list[i]
+    print "Variance of sample %d: %f" % (i + 1, variance_list[i])
 
 # find the maximum value of variance
 max_variance = max(variance_list)
 
 # compute the Cochran's test statistic
 C = max_variance / get_sum(variance_list)
-print "The Cochran's test statistic is C = ", C
+print "The Cochran's test statistic C = %f." % C
 
 # get the critical value
-alpha = 0.05                                            # level of significance
-#upsilon = (len(dataset) / K) - 1
-upsilon = n - 1                                         # degrees of freedom
-critical_value = get_critical_value(alpha, K, upsilon)
-print "The critical value for a level of significance of 0.05 is ", critical_value
+upsilon = n - 1                                                 # degrees of freedom
+critical_value = get_critical_value(alpha, kappa, upsilon)
+print "The critical value for a level of significance of %f is %f." % (alpha, critical_value)
 
+# print the test result
 if (C < critical_value):
     print "C < critical_value ==> The null hypothesis is held."
 else:
     print "C >= critical_value ==> The null hypothesis is rejected."
 
-file.close()
+data_file.close()
