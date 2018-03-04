@@ -16,5 +16,10 @@ def testPearson():
     r,p = computePearson(age,glucoseLevel)
     print("Pearson correlation value:",r)
     print("p-value:",p)
+	
+    if(p<0.05):
+	    print("Null hypothesis rejected")
+    else:
+	    print("Null hypothesis is not rejected")
 
 testPearson()
